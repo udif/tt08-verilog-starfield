@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Your Name
+ * Copyright (c) 2024 Udi Finkelstein
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -16,12 +16,32 @@ module tt_um_example (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
   assign uio_out = 0;
   assign uio_oe  = 0;
 
-  // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+  wire [9:0]h_count;
+  wire [9:0]v_count;
+
+  wire rst = ~rst_n;
+  wire x_1 = ( h_count == 10'd1);
+  wire y_0 = ( v_count == 10'd0);
+  wire x_640 = ( h_count == 10'd640);
+  wire y_479 = ( v_count == 10'd479);
+  wire white = x_1 | y_0 | x_640 | y_479;
+  
+  
+  assign {uo_out[0], uo_out[4]} = white ? 2'b11 : h_count[7:6]; // R
+  assign {uo_out[1], uo_out[5]} = white ? 2'b11 : v_count[7:6]; // G
+  assign {uo_out[2], uo_out[6]} = white ? 2'b11 : v_count[5:4]; // B
+ 
+  vgaControl vga_inst(
+	.clock(clk),
+	.reset(rst),       // action on posedge clock, reset is active low, enable active high
+	.h_sync(uo_out[7]),
+	.v_sync(uo_out[3]),             // syncs are active low
+	.bright(),                   // bright is active high
+	.h_count(h_count),
+	.v_count(v_count)
+);
 
 endmodule
